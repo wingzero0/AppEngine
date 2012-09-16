@@ -1,0 +1,22 @@
+application: barcode-share
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /TenThousandHours/scripts
+  static_dir: TenThousandHours/scripts
+
+- url: /TenThousandHours/.*
+  script: TenThousandHours.app
+
+- url: /stylesheets
+  static_dir: stylesheets
+
+- url: /.*
+  script: helloworld.app
+
+libraries:
+- name: jinja2
+  version: latest
