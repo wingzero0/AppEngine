@@ -23,9 +23,9 @@ class Plan(db.Model):
 	totalTime = db.IntegerProperty()
 	spentTime = db.IntegerProperty()
 
-def PlanKey(planName=None):
+def PlanKey(userName=None):
 	"""Constructs a Datastore key for a Plan entity with planName."""
-	return db.Key.from_path('Plan', planName or 'defaultPlan')
+	return db.Key.from_path('Plan', userName or 'defaultUser')
 
 class MainPage(webapp2.RequestHandler):
 	def get(self):
@@ -58,28 +58,83 @@ class MainPage(webapp2.RequestHandler):
 class MakePlan(webapp2.RequestHandler):
 	def post(self):
 		# update the plan or make a new plan
-		planName = self.request.get("planName");
+		self.planName = self.request.get("planName");
 		if not users.get_current_user() :
+			# the javascript will stuck here
 			url = users.create_login_url(self.request.uri)
-			self.redirect(url)
+			#self.redirect(url)
+			ret = dict()
+			ret["result"] = 0
+			ret["url"] = url
+			self.response.out.write(json.dumps(ret))
 			return
 		else:
 			#self.response.out.write("arleady login")
-			userName = users.get_current_user().nickname()
+			self.userName = users.get_current_user().nickname()
 			if self.request.get("update") == '1':
 				self.response.out.write("update")
 			elif self.request.get("newPlan") == '1':
-				plan = Plan(parent=PlanKey(planName))
-				plan.author = userName
-				plan.planName = planName
-				plan.totalTime = int( self.request.get("hour") )
-				plan.spentTime = 0
-				plan.put()
-				ret = dict()
-				ret['return'] = 1
-				self.response.out.write(json.dumps(ret))
+				self.NewPlan()
 			else:
 				self.response.out.write("no action")
 
+	def NewPlan(self):
+		plan = Plan(parent=PlanKey(self.userName))
+		plan.author = self.userName
+		plan.planName = self.planName
+		plan.totalTime = int( self.request.get("hour") )
+		plan.spentTime = 0
+		plan.put()
+		ret = dict()
+		ret['return'] = 1
+		self.response.out.write(json.dumps(ret))
+
+class GetPlan(webapp2.RequestHandler):
+	def get(self):
+		# get all user plans
+		self.planName = self.request.get("planName");
+		if self.request.get("publicPlans") == '1':
+			planQuery = Plan.all()
+			planQuery = planQuery.order("-createTime")
+			plans = planQuery.fetch(10)
+			ret = dict()
+			ret['return'] = 1
+			i = 0
+			for plan in plans:
+				ret[i] = dict()
+				ret[i]['author'] = plan.author
+				ret[i]['planName'] = plan.planName
+				ret[i]['createTime'] = "%s" % (plan.createTime)
+				ret[i]['totalTime'] = plan.totalTime
+				ret[i]['spentTime'] = plan.spentTime
+				i = i + 1
+			self.response.out.write(json.dumps(ret))
+			#self.response.out.write(json.dumps(plans))
+			
+		if not users.get_current_user() :
+			# the javascript will stuck here
+			url = users.create_login_url(self.request.uri)
+			ret = dict()
+			ret["result"] = 0
+			ret["url"] = url
+			self.response.out.write(json.dumps(ret))
+			return
+		else:
+			#self.response.out.write("arleady login")
+			self.userName = users.get_current_user().nickname()
+			if self.request.get("userPlans") == '1':
+				plans = self.GetUserPlans(-1)
+				for plan in plans:
+					output = "%s<br>" % (plan.createTime)
+					self.response.out.write(output)
+
+
+	def GetUserPlans(self, numberOfPlan):
+		planQuery = Plan.all().ancestor(PlanKey(self.userName))
+		planQuery = planQuery.order("-createTime")
+		plans = planQuery.fetch(10)
+		return plans
+
 app = webapp2.WSGIApplication([('/TenThousandHours/', MainPage), 
-	('/TenThousandHours/MakePlan', MakePlan)], debug=True)
+	('/TenThousandHours/MakePlan', MakePlan),
+	('/TenThousandHours/GetPlan', GetPlan)], debug=True)
