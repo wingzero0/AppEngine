@@ -2,6 +2,7 @@ import cgi
 import datetime
 import urllib
 import webapp2
+import logging
 
 import jinja2
 import os
@@ -57,6 +58,8 @@ class MainPage(webapp2.RequestHandler):
 
 class MakePlan(webapp2.RequestHandler):
 	def post(self):
+		postData = self.request.arguments()
+		logging.error("start make plan");
 		# update the plan or make a new plan
 		self.planName = self.request.get("planName");
 		if not users.get_current_user() :
@@ -86,7 +89,7 @@ class MakePlan(webapp2.RequestHandler):
 		plan.spentTime = 0
 		plan.put()
 		ret = dict()
-		ret['return'] = 1
+		ret['result'] = 1
 		self.response.out.write(json.dumps(ret))
 
 class GetPlan(webapp2.RequestHandler):
@@ -98,7 +101,7 @@ class GetPlan(webapp2.RequestHandler):
 			planQuery = planQuery.order("-createTime")
 			plans = planQuery.fetch(10)
 			ret = dict()
-			ret['return'] = 1
+			ret['result'] = 1
 			i = 0
 			for plan in plans:
 				ret[i] = dict()

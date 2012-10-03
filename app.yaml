@@ -8,6 +8,10 @@ handlers:
 - url: /TenThousandHours/scripts
   static_dir: TenThousandHours/scripts
 
+- url: /TenThousandHours/personal\.html
+  static_files: TenThousandHours/personal.html
+  upload: TenThousandHours/personal.html
+
 - url: /TenThousandHours/.*
   script: TenThousandHours.app
 

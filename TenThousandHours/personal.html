@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<link type="text/css" rel="stylesheet" href="scripts/main.css" />
+		<link type="text/css" rel="stylesheet" href="scripts/jquery-ui.css" />
+		<script type="text/javascript" src="scripts/jquery-1.8.1.min.js"></script>
+		<script type="text/javascript" src="scripts/jquery-ui-1.8.23.custom.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			$(document).ready( function() {
+					$( "#slider" ).slider();
+					//GetPlan();
+				});	
+			function BoxFadeIn(){
+				alert("fade in");
+			}
+function GetPlan(){
+	$.get("GetPlan", {userPlans: 1}, function (xml){
+		alert(xml);
+	});
+}
+
+function NewPlan(){
+	var postArray = new Array();
+	postArray = {newPlan: $('[name=newPlan]').val() , planName: $('[name=planName]').val(), hour: $('[name=hour]').val(), comment: $('[name=comment]').val()};
+	
+	$.post("MakePlan", postArray, function (json){
+			if (json["result"] == 1){
+				DrawPlan();
+				DisplayPartialFrom();
+			}
+		}, "json");
+}
+
+function DrawPlan(){
+
+}
+
+function DisplayWholeFrom(){
+	$("#NewProject").html('<form name="NewProjectFrom" id="NewProjectFrom">\
+		<input type="hidden" name="newPlan" value="1" />\
+		<input id="NewProjectFocusText" type="text" value="" name="planName" size="10" class="wide" /><br />\
+		Hour<input type="text" value="10" name="hour" size="4" />Hour<br />\
+		Comment<input type="text" size="10" name="comment" class="wide">Comment<br />\
+		<button type="button" onclick="NewPlan()">+</button>\
+		</from>\
+		'
+	);
+	var text_val = document.getElementById("NewProjectFocusText");
+	text_val.focus();
+}
+
+function DisplayPartialFrom(){
+	$("#NewProject").html(
+			'<input type="text" value="Your new project" name="ProjectName" onclick="DisplayWholeFrom();"/>'
+		);
+}
+		</script>
+	</head>
+	<body>
+		<div id="NewProject" class="blocktext">
+			<input type="text" value="Your new project" name="ProjectName" onclick="DisplayWholeFrom();"/> hello world
+		</div>
+		<div class="demo">
+			<div id="slider"></div>
+		</div>
+	</body>
+</html>
