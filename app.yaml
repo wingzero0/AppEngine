@@ -5,6 +5,12 @@ api_version: 1
 threadsafe: true
 
 handlers:
+- url: /TenThousandHours/css
+  static_dir: TenThousandHours/css
+
+- url: /TenThousandHours/js
+  static_dir: TenThousandHours/js
+
 - url: /TenThousandHours/scripts
   static_dir: TenThousandHours/scripts
 
