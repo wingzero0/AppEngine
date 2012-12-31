@@ -1,0 +1,1 @@
+1. the controller should read a uniform variable (ex. "op") to decide which method it is requested.

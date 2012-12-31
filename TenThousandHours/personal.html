@@ -3,14 +3,16 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<link href="css/smoothness/jquery-ui-1.9.2.custom.css" rel="stylesheet">
+		<link href="css/main.css" rel="stylesheet">
 		<script src="js/jquery-1.8.3.js"></script>
 		<script src="js/jquery-ui-1.9.2.custom.js"></script>
+		<script src="js/plan.js"></script>
 		<script type="text/javascript" charset="utf-8">
 			$(document).ready( function() {
 				DrawPlan("TestPlan",10, 0);
-				DrawPlan("SecondPlan",10, 0);
+				//DrawPlan("SecondPlan",10, 0);
 				$( "#submit" ).button()
-				.click(function() {});
+				.click(NewPlan);
 			});
 			function FormFadeIn(){
 				$( "#initText" ).css("display", "none");
@@ -18,20 +20,10 @@
 				var text_val = document.getElementById("NewProjectFocusText");
 				text_val.focus();	
 			}
-			function BoxFadeIn(){
-				alert("fade in");
-			}
 			function GetPlan(){
 				$.get("GetPlan", {userPlans: 1}, function (xml){
 					alert(xml);
 				});
-			}
-
-			function NewPlan(){
-				var postArray = new Array();
-				postArray = {newPlan: $('[name=newPlan]').val() , planName: $('[name=planName]').val(), hour: $('[name=hour]').val(), comment: $('[name=comment]').val()};
-			
-				DrawPlan(postArray.planName, postArray.hour, 0);
 			}
 
 			function PlusHour(interval, sliderID){
@@ -40,21 +32,6 @@
 				var val = $(sliderID).slider("value");
 				$(sliderID).slider({value: val + interval});
 				//console.log(targetSlider.slider("value"));
-			}
-
-			function DrawPlan(planName, totalTime, spendTime){
-			
-				var planTag = $("<div id='" + planName + "' class='planItem'></div>");
-				var sliderTag = $("<div id='" + planName + "Slider' class='slider'></div>");
-				var minusTag = $("<div class='minusEdit'><button onclick='PlusHour(-1, \"#" + planName + "Slider\")'>-</button></div>");
-				var plusTag = $("<div class='plusEdit'><button onclick='PlusHour(1, \"#" + planName + "Slider\")'>+</button></div>");
-				planTag.append(minusTag);
-				planTag.append(sliderTag);
-				planTag.append(plusTag);
-				
-				$("#dynamicSliderRegion").append( planTag );
-				var newSlider = $( "#" + planName + "Slider" ).slider({ min: 0, max: totalTime, value: 1});
-				
 			}
 			
 			function DisplayPartialFrom(){
@@ -65,21 +42,23 @@
 		</script>
 	</head>
 	<body>
+		<div class="blockText">
 		<div id="initText">
-			<label>NewPlan</label>
+			<label>NewPlanName</label>
 			<input type="text" value="Your new project" name="ProjectName" onclick="FormFadeIn();"/>
 		</div>
 		<div id="hiddenForm" style="display: none">
 			<form name="NewProjectFrom" id="NewProjectFrom">
 				<input type="hidden" name="newPlan" value="1" />
-				<label>PlanName</label>
+				<label>NewPlanName</label>
 				<input id="NewProjectFocusText" type="text" value="" name="planName" size="10" class="wide" /><br />
 				<label> Hour</label>
 				<input type="text" value="10" name="hour" size="4" /><br />
 				<label> Comment</label>
 				<input type="text" size="10" name="comment" class="wide" /><br />
 				<button id="submit">Submit</button>
-			</form>		
+			</form>
+		</div>
 		</div>
 		<div class="demo">
 			<div id="minusHour" class="minusEdit"></div>

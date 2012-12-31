@@ -20,7 +20,8 @@ class Plan(db.Model):
 	"""Models an individual Guestbook entry with an author, content, and date."""
 	author = db.StringProperty()
 	planName = db.StringProperty(multiline=True)
-	createTime = db.DateTimeProperty(auto_now_add=True)
+	#createTime = db.DateTimeProperty(auto_now_add=True)
+	createTime = db.DateTimeProperty()
 	totalTime = db.IntegerProperty()
 	spentTime = db.IntegerProperty()
 
@@ -62,6 +63,7 @@ class MakePlan(webapp2.RequestHandler):
 		logging.error("start make plan");
 		# update the plan or make a new plan
 		self.planName = self.request.get("planName");
+		logging.error("plan name:" + self.planName);
 		if not users.get_current_user() :
 			# the javascript will stuck here
 			url = users.create_login_url(self.request.uri)
@@ -83,13 +85,17 @@ class MakePlan(webapp2.RequestHandler):
 
 	def NewPlan(self):
 		plan = Plan(parent=PlanKey(self.userName))
+		#plan = Plan(parent=PlanKey("test key"))
 		plan.author = self.userName
 		plan.planName = self.planName
 		plan.totalTime = int( self.request.get("hour") )
 		plan.spentTime = 0
+		plan.createTime = datetime.datetime.now()
 		plan.put()
 		ret = dict()
 		ret['result'] = 1
+		ret['createTime'] = plan.createTime.strftime("%Y-%m-%d %H:%M:%S")
+		ret['id'] = plan.key().id()
 		self.response.out.write(json.dumps(ret))
 
 class GetPlan(webapp2.RequestHandler):
@@ -137,6 +143,15 @@ class GetPlan(webapp2.RequestHandler):
 		planQuery = planQuery.order("-createTime")
 		plans = planQuery.fetch(10)
 		return plans
+	
+	def GetSpecificPlans(self, author, planName, createTime=None):
+		'''
+		planQuery = Plan.all().ancestor(PlanKey(self.userName))
+		planQuery = planQuery.order("-createTime")
+		plans = planQuery.fetch(10)
+		'''
+		
+		
 
 app = webapp2.WSGIApplication([('/TenThousandHours/', MainPage), 
 	('/TenThousandHours/MakePlan', MakePlan),
