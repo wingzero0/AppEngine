@@ -9,7 +9,7 @@
 		<script src="js/plan.js"></script>
 		<script type="text/javascript" charset="utf-8">
 			$(document).ready( function() {
-				DrawPlan("TestPlan",10, 0);
+				DrawPlan("0", "TestPlan",10, 0);
 				//DrawPlan("SecondPlan",10, 0);
 				$( "#submit" ).button()
 				.click(NewPlan);
@@ -24,14 +24,6 @@
 				$.get("GetPlan", {userPlans: 1}, function (xml){
 					alert(xml);
 				});
-			}
-
-			function PlusHour(interval, sliderID){
-				sliderId = "#" + sliderID;
-			
-				var val = $(sliderID).slider("value");
-				$(sliderID).slider({value: val + interval});
-				//console.log(targetSlider.slider("value"));
 			}
 			
 			function DisplayPartialFrom(){

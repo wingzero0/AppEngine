@@ -85,7 +85,6 @@ class MakePlan(webapp2.RequestHandler):
 
 	def NewPlan(self):
 		plan = Plan(parent=PlanKey(self.userName))
-		#plan = Plan(parent=PlanKey("test key"))
 		plan.author = self.userName
 		plan.planName = self.planName
 		plan.totalTime = int( self.request.get("hour") )
