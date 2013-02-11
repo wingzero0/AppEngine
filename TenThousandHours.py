@@ -58,8 +58,8 @@ class MainPage(webapp2.RequestHandler):
 		self.response.out.write(template.render(template_values))
 
 class MakePlan(webapp2.RequestHandler):
-	def post(self):
-		postData = self.request.arguments()
+	def get(self):
+		#postData = self.request.arguments()
 		logging.error("start make plan");
 		# update the plan or make a new plan
 		self.planName = self.request.get("planName");
@@ -74,10 +74,9 @@ class MakePlan(webapp2.RequestHandler):
 			self.response.out.write(json.dumps(ret))
 			return
 		else:
-			#self.response.out.write("arleady login")
 			self.userName = users.get_current_user().nickname()
 			if self.request.get("update") == '1':
-				self.response.out.write("update")
+				self.UpdatePlan()
 			elif self.request.get("newPlan") == '1':
 				self.NewPlan()
 			else:
@@ -96,6 +95,24 @@ class MakePlan(webapp2.RequestHandler):
 		ret['createTime'] = plan.createTime.strftime("%Y-%m-%d %H:%M:%S")
 		ret['id'] = plan.key().id()
 		self.response.out.write(json.dumps(ret))
+		
+	def UpdatePlan(self):
+		plans = Plan.all().run(limit=5)
+		plan = None
+		for e in plans:
+			#plan = e
+			logging.error("plan name:" + e.planName);
+			break
+		
+		if plan:
+			ret = dict()
+			ret["result"] = 1
+			ret["author"] = plan.author
+			ret["createTime"] = plan.createTime
+			ret["planName"] = plan.planName
+			self.response.out.write(json.dumps(ret))
+		else:
+			self.response.out.write(json.dumps("end"))
 
 class GetPlan(webapp2.RequestHandler):
 	def get(self):
@@ -150,8 +167,15 @@ class GetPlan(webapp2.RequestHandler):
 		plans = planQuery.fetch(10)
 		'''
 		
-		
+class Test(webapp2.RequestHandler):
+	def get(self):
+		#run time Test
+		ret = dict()
+		ret["ret"]= "test respone instandly add"
+		self.response.out.write(json.dumps(ret))
+
 
 app = webapp2.WSGIApplication([('/TenThousandHours/', MainPage), 
 	('/TenThousandHours/MakePlan', MakePlan),
-	('/TenThousandHours/GetPlan', GetPlan)], debug=True)
+	('/TenThousandHours/GetPlan', GetPlan),
+	('/TenThousandHours/Test', Test)], debug=True)
