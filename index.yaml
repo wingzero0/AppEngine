@@ -19,5 +19,10 @@ indexes:
 - kind: Plan
   ancestor: yes
   properties:
+  - name: ID
+
+- kind: Plan
+  ancestor: yes
+  properties:
   - name: createTime
     direction: desc

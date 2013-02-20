@@ -19,15 +19,20 @@ jinja_environment = jinja2.Environment(
 class Plan(db.Model):
 	"""Models an individual Guestbook entry with an author, content, and date."""
 	author = db.StringProperty()
+	googleID = db.StringProperty()
 	planName = db.StringProperty(multiline=True)
 	#createTime = db.DateTimeProperty(auto_now_add=True)
 	createTime = db.DateTimeProperty()
 	totalTime = db.IntegerProperty()
 	spentTime = db.IntegerProperty()
 
-def PlanKey(userName=None):
+#def PlanKey(userName=None):
+#	"""Constructs a Datastore key for a Plan entity with planName."""
+#	return db.Key.from_path('Plan', userName or 'defaultUser')
+
+def PlanKey(userID=None):
 	"""Constructs a Datastore key for a Plan entity with planName."""
-	return db.Key.from_path('Plan', userName or 'defaultUser')
+	return db.Key.from_path('Plan', userID or 'defaultUser')
 
 class MainPage(webapp2.RequestHandler):
 	def get(self):
@@ -58,7 +63,7 @@ class MainPage(webapp2.RequestHandler):
 		self.response.out.write(template.render(template_values))
 
 class MakePlan(webapp2.RequestHandler):
-	def get(self):
+	def post(self):
 		#postData = self.request.arguments()
 		logging.error("start make plan");
 		# update the plan or make a new plan
@@ -75,6 +80,7 @@ class MakePlan(webapp2.RequestHandler):
 			return
 		else:
 			self.userName = users.get_current_user().nickname()
+			self.userID = users.get_current_user().user_id()
 			if self.request.get("update") == '1':
 				self.UpdatePlan()
 			elif self.request.get("newPlan") == '1':
@@ -83,10 +89,11 @@ class MakePlan(webapp2.RequestHandler):
 				self.response.out.write("no action")
 
 	def NewPlan(self):
-		plan = Plan(parent=PlanKey(self.userName))
+		plan = Plan(parent=PlanKey(self.userID))
 		plan.author = self.userName
+		plan.googleID = self.userID
 		plan.planName = self.planName
-		plan.totalTime = int( self.request.get("hour") )
+		plan.totalTime = int( self.request.get("totalTime") )
 		plan.spentTime = 0
 		plan.createTime = datetime.datetime.now()
 		plan.put()
@@ -97,22 +104,23 @@ class MakePlan(webapp2.RequestHandler):
 		self.response.out.write(json.dumps(ret))
 		
 	def UpdatePlan(self):
-		plans = Plan.all().run(limit=5)
-		plan = None
-		for e in plans:
-			#plan = e
-			logging.error("plan name:" + e.planName);
-			break
+		plan = Plan.get_by_id(int(self.request.get("id")), PlanKey(self.userID))
 		
 		if plan:
+			#if (plan.author)
+			plan.planName = self.planName
+			plan.totalTime = int( self.request.get("totalTime") )
+			plan.spentTime = int( self.request.get("spentTime") )
+			plan.put()
 			ret = dict()
-			ret["result"] = 1
-			ret["author"] = plan.author
-			ret["createTime"] = plan.createTime
-			ret["planName"] = plan.planName
-			self.response.out.write(json.dumps(ret))
+			ret['result'] = 1
+			ret['id'] = plan.key().id()
+			self.response.out.write(json.dumps(ret)) 
 		else:
-			self.response.out.write(json.dumps("end"))
+			ret = dict()
+			ret['result'] = 0
+			ret['id'] = int (self.request.get("id")) 
+			self.response.out.write(json.dumps(ret))
 
 class GetPlan(webapp2.RequestHandler):
 	def get(self):
@@ -134,7 +142,6 @@ class GetPlan(webapp2.RequestHandler):
 				ret[i]['spentTime'] = plan.spentTime
 				i = i + 1
 			self.response.out.write(json.dumps(ret))
-			#self.response.out.write(json.dumps(plans))
 			
 		if not users.get_current_user() :
 			# the javascript will stuck here
@@ -145,17 +152,14 @@ class GetPlan(webapp2.RequestHandler):
 			self.response.out.write(json.dumps(ret))
 			return
 		else:
-			#self.response.out.write("arleady login")
 			self.userName = users.get_current_user().nickname()
-			if self.request.get("userPlans") == '1':
+			self.userID = users.get_current_user().user_id()
+			if self.request.get("op") == "userPlans":
 				plans = self.GetUserPlans(-1)
-				for plan in plans:
-					output = "%s<br>" % (plan.createTime)
-					self.response.out.write(output)
-
+				self.OutputPlans(plans)
 
 	def GetUserPlans(self, numberOfPlan):
-		planQuery = Plan.all().ancestor(PlanKey(self.userName))
+		planQuery = Plan.all().ancestor(PlanKey(self.userID))
 		planQuery = planQuery.order("-createTime")
 		plans = planQuery.fetch(10)
 		return plans
@@ -167,11 +171,35 @@ class GetPlan(webapp2.RequestHandler):
 		plans = planQuery.fetch(10)
 		'''
 		
+	def OutputPlans(self, plans):
+		ret = dict()
+		ret['result'] = 1
+		ret["plans"] = dict()
+		i = 0
+		for plan in plans:
+			ret["plans"][i] = dict()
+			ret["plans"][i]['author'] = plan.author
+			ret["plans"][i]['id'] = plan.key().id()
+			ret["plans"][i]['planName'] = plan.planName
+			ret["plans"][i]['createTime'] = plan.createTime.strftime("%Y-%m-%d %H:%M:%S")
+			ret["plans"][i]['totalTime'] = plan.totalTime
+			ret["plans"][i]['spentTime'] = plan.spentTime
+			i = i + 1
+		ret["totalNum"] = i
+		self.response.out.write(json.dumps(ret))
+		
 class Test(webapp2.RequestHandler):
 	def get(self):
 		#run time Test
+		self.userName = users.get_current_user().nickname()
+		planQuery = Plan.all().ancestor(PlanKey(self.userName))
+		planQuery = planQuery.order("-createTime")
+		plans = planQuery.fetch(10)
+		str = ""
+		for plan in plans:
+			str = str + plan.planName
 		ret = dict()
-		ret["ret"]= "test respone instandly add"
+		ret["ret"]= str
 		self.response.out.write(json.dumps(ret))
 
 

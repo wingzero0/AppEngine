@@ -9,10 +9,12 @@
 		<script src="js/plan.js"></script>
 		<script type="text/javascript" charset="utf-8">
 			$(document).ready( function() {
-				DrawPlan("0", "TestPlan",10, 0);
+				//DrawPlan("0", "TestPlan",10, 0);
 				//DrawPlan("SecondPlan",10, 0);
-				$( "#submit" ).button()
-				.click(NewPlan);
+				$( "#submit" ).button().click(NewPlan);
+				GetUserPlans();
+				
+				updateTimer();
 			});
 			function FormFadeIn(){
 				$( "#initText" ).css("display", "none");
@@ -28,8 +30,8 @@
 			
 			function DisplayPartialFrom(){
 				$("#NewProject").html(
-						'<input type="text" value="Your new project" name="ProjectName" onclick="DisplayWholeFrom();"/>'
-						);
+					'<input type="text" value="Your new project" name="ProjectName" onclick="DisplayWholeFrom();"/>'
+				);
 			}
 		</script>
 	</head>
