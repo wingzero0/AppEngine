@@ -1,7 +1,8 @@
 function NewPlan(clickEvent){
 	clickEvent.preventDefault();
 	var postArray = new Array();
-	postArray = {newPlan: $('[name=newPlan]').val() , planName: $('[name=planName]').val(), totalTime: $('[name=hour]').val(), comment: $('[name=comment]').val()};
+	//postArray = {op: $('[name=op]').val() , planName: $('[name=planName]').val(), totalTime: $('[name=hour]').val(), comment: $('[name=comment]').val()};
+	postArray = {op: "newPlan" , planName: $('[name=planName]').val(), totalTime: $('[name=hour]').val(), comment: $('[name=comment]').val()};
 	/*
 	$.each(postArray, function(index, value){
 		console.log("index:"+index +" value:" + value);
@@ -23,20 +24,21 @@ function NewPlan(clickEvent){
 
 function PlusHour(hourChange, planID){
 	var sliderObj = $("#slider" +planID);
+	if (sliderObj.slider("option", "disabled")) return;
+	
 	var spendHour = sliderObj.slider("option", "value");
 	sliderObj.slider("option", "value", spendHour + hourChange);
-	
 	$("#" + planID).attr("changed", 1);
 }
 
 
-function DrawPlan(planID, planName, totalTime, spendTime){
+function DrawPlan(planID, planName, totalTime, spentTime){
 	var planTag = $("<div id='" + planID + "' class='planItem' changed=0>" + "</div>");
 	var sliderTag = $("<div />", {
 		"id": "slider" + planID,
 		"class": "slider"
 	});
-	sliderTag.slider({ "min": 0, "max": totalTime, "value": spendTime});
+	sliderTag.slider({ "min": 0, "max": totalTime, "value": spentTime});
 	
 	// button minus
 	var minusTag = $("<div />", {"class": "minusEdit"} );
@@ -110,14 +112,52 @@ var updateTimer = function () {
 };
 
 function SaveChanged(){
+	// 1. disable all buttons and sliders
+	// 2. upload value if "changed" is set
+	// 3. enable all buttons and sliders
 	DebugOutput("Saving Changed");
+	// disable
+	//var updateList = new Array();
+	var updateList = {};
+	var i = 0;
 	$.each(planList, function (index, planID){
+		var sliderID = "#slider" + planID;
+		$(sliderID).slider("disable");
 		var changed = $("#" + planID).attr("changed");
 		if (changed == 0){
-			DebugOutput(index + ":" + planID + ":" + changed);
-		}else{
 			DebugOutput(index + ":" + planID);
+		}else{
+			//var planObj = new Object();
+			//planObj.ID = planID;
+			//planObj.spentTime = $(sliderID).slider("value");
+			//updateList.push(planObj);
+			
+			updateList["id" + i] = planID;
+			updateList["spentTime" + i] = $(sliderID).slider("value");
+			DebugOutput(index + ":" + planID + ":" + updateList["spentTime" + i]);
+			i++;
 		}
+	});
+	//upload
+	if (i > 0){
+		//updateList use as postArray
+		updateList["num"] = i;
+		updateList["op"] = "update";
+		$.post("/TenThousandHours/MakePlan", updateList, 
+			function (data){
+				if (data.result == 1){
+					DebugOutput("update finish");
+				}else{
+					alert(data.errorMessage);
+				}
+			},
+			"json");
+	}
+	//enable
+	$.each(planList, function (index, planID){
+		var sliderID = "#slider" + planID;
+		$(sliderID).slider("enable");
+		$("#" + planID).attr("changed", 0);
 	});
 }
 

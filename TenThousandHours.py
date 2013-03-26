@@ -66,14 +66,12 @@ class MakePlan(webapp2.RequestHandler):
 	def post(self):
 		#postData = self.request.arguments()
 		logging.error("start make plan");
-		# update the plan or make a new plan
-		self.planName = self.request.get("planName");
-		logging.error("plan name:" + self.planName);
+		ret = dict()
+		# update the plans or make a new plan
 		if not users.get_current_user() :
 			# the javascript will stuck here
 			url = users.create_login_url(self.request.uri)
 			#self.redirect(url)
-			ret = dict()
 			ret["result"] = 0
 			ret["url"] = url
 			self.response.out.write(json.dumps(ret))
@@ -81,12 +79,15 @@ class MakePlan(webapp2.RequestHandler):
 		else:
 			self.userName = users.get_current_user().nickname()
 			self.userID = users.get_current_user().user_id()
-			if self.request.get("update") == '1':
-				self.UpdatePlan()
-			elif self.request.get("newPlan") == '1':
+			if self.request.get("op") == 'update':
+				self.UpdatePlans()
+			elif self.request.get("op") == 'newPlan':
+				self.planName = self.request.get("planName");
+				logging.error("plan name:" + self.planName);
 				self.NewPlan()
 			else:
-				self.response.out.write("no action")
+				ret["errorMessage"] = "no action:op=%s" % (self.request.get("op"))
+				self.response.out.write(json.dumps(ret))
 
 	def NewPlan(self):
 		plan = Plan(parent=PlanKey(self.userID))
@@ -102,7 +103,40 @@ class MakePlan(webapp2.RequestHandler):
 		ret['createTime'] = plan.createTime.strftime("%Y-%m-%d %H:%M:%S")
 		ret['id'] = plan.key().id()
 		self.response.out.write(json.dumps(ret))
+	
+	def UpdatePlans(self):
+		num = int ( self.request.get("num") )
+		ret = dict()
+		flag = 1
+		for i in range(num):
+			# from 0 to num -1
+			index = "%d" % (i) 
+			planTuple = self.request.get("id" + index).partition(u"plan")
+			planID = int(planTuple[2])
+			spentTime = int(self.request.get("spentTime" + index))
+			flag = flag & self.UpdatePlan(planID, 0, spentTime, "Tmp")
+			if flag == 0:
+				ret['result'] = 0
+				ret['errorMessage'] = "put fail"
+				ret['id'] = planID
+				self.response.out.write(json.dumps(ret))
+				return
 		
+		ret["result"] = 1
+		self.response.out.write(json.dumps(ret))
+			
+	def UpdatePlan(self, planID, totalTime, spentTime, planName):
+		plan = Plan.get_by_id(planID, PlanKey(self.userID))
+		
+		if plan:
+			#plan.planName = self.planName
+			#plan.totalTime = totalTime
+			plan.spentTime = spentTime
+			plan.put()
+			return 1 
+		else:
+			return 0
+	'''
 	def UpdatePlan(self):
 		plan = Plan.get_by_id(int(self.request.get("id")), PlanKey(self.userID))
 		
@@ -121,7 +155,7 @@ class MakePlan(webapp2.RequestHandler):
 			ret['result'] = 0
 			ret['id'] = int (self.request.get("id")) 
 			self.response.out.write(json.dumps(ret))
-
+	'''
 class GetPlan(webapp2.RequestHandler):
 	def get(self):
 		# get all user plans
