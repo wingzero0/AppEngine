@@ -28,7 +28,7 @@ function PlusHour(hourChange, planID){
 	
 	var spendHour = sliderObj.slider("option", "value");
 	sliderObj.slider("option", "value", spendHour + hourChange);
-	$("#" + planID).attr("changed", 1);
+	//$("#" + planID).attr("changed", 1);
 }
 
 
@@ -38,10 +38,15 @@ function DrawPlan(planID, planName, totalTime, spentTime){
 		"id": "slider" + planID,
 		"class": "slider"
 	});
-	sliderTag.slider({ "min": 0, "max": totalTime, "value": spentTime});
+	sliderTag.slider({ 
+			"min": 0, 
+			"max": totalTime, 
+			"value": spentTime, 
+			"range":"min",
+			"change" : function (){ $("#" + planID).attr("changed", 1); } 
+		});
 	
 	// button minus
-	var minusTag = $("<div />", {"class": "minusEdit"} );
 	var minusButton = $("<button />");
 	minusButton.button({
 		icons: { primary: "ui-icon-triangle-1-w" },
@@ -51,11 +56,8 @@ function DrawPlan(planID, planName, totalTime, spentTime){
 		//PlusHour(-1, "slider"+planID);
 		PlusHour(-1, planID);
 	});
-	minusTag.append(minusButton);
 	
 	// button plus
-	//var plusTag = $("<div />", {"class": "plusEdit"} );
-	var plusTag = $("<div />" );
 	var plusButton = $("<button />");
 	plusButton.button({
 		icons: { primary: "ui-icon-triangle-1-e" },
@@ -65,17 +67,21 @@ function DrawPlan(planID, planName, totalTime, spentTime){
 		//PlusHour(1, "slider"+planID);
 		PlusHour(1, planID);
 	});
-	plusTag.append(plusButton);
 	
 	// final aggregate 
-	planTag.append(minusTag);
+	planTag.append(minusButton);
 	planTag.append(sliderTag);
-	planTag.append(plusTag);
+	planTag.append(plusButton);
 	
 	$("#dynamicSliderRegion").append( planName );
 	$("#dynamicSliderRegion").append( planTag );
 	
 	planList.push(planID);
+	
+	minusButton.position({my:"center center", at: "left center", of: planTag});
+	sliderTag.position({my:"center center", at: "center center", of: planTag});
+	plusButton.position({my:"center center", at: "right center", of: planTag});
+	
 }
 
 function GetUserPlans(){
@@ -108,7 +114,7 @@ var updateTimer = function () {
     // By the way, can just pass in the function name instead of an anonymous
     // function unless if you want to pass parameters or change the value of 'this'
 	SaveChanged();
-    timer = setTimeout(updateTimer, 10000);
+    timer = setTimeout(updateTimer, 5000);
 };
 
 function SaveChanged(){

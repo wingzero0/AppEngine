@@ -2,56 +2,67 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<link type="text/css" rel="stylesheet" href="scripts/main.css" />
-		<link type="text/css" rel="stylesheet" href="scripts/jquery-ui.css" />
-		<script type="text/javascript" src="scripts/jquery-1.8.1.min.js"></script>
-		<script type="text/javascript" src="scripts/jquery-ui-1.8.23.custom.min.js"></script>
+		<script type="text/javascript" src="js/jquery-1.8.3.js"></script>
+		<script src="js/jquery-ui-1.9.2.custom.js"></script>
+		<link href="css/smoothness/jquery-ui-1.9.2.custom.css" rel="stylesheet">
+		<link href="css/main.css" rel="stylesheet">
 		<script type="text/javascript" charset="utf-8">
 			$(document).ready( function() {
-					$( "#slider" ).slider();
-					GetPlan();
-				});
-			//$(function() {
-			//	$( "#slider" ).slider();
-			//});
-			
-			function BoxFadeIn(){
-				alert("fade in");
+				postArray = {}
+				$.get("/TenThousandHours/loginController", postArray, 
+					function (data){
+						if (data.result == 1){
+							$.each(data, function(index, value){
+								//console.log("index:"+index +" value:" + value);
+							});
+							$("#logLink").attr("href", data.logoutURL);
+							$("#logLink").text("Logout");
+							$("#personalLink").show();
+							$("#homeLink").show();
+						}else{
+							$("#logLink").attr("href", data.loginURL);
+							$("#logLink").text("Login");
+							//$("#personalLink").hide();
+							//$("#homeLink").hide();
+						}
+					},
+					"json");
+				
+				postArray["op"] = "publicPlans";
+				$.get("/TenThousandHours/GetPlan", postArray,function(data){
+					if (data.result == 1){
+						for (i = 0;i<data.totalNum;i++){
+							$.each(data.plans[i], function(index, value){
+								console.log("index:"+ index +" value:" + value);
+							});
+							var plan = data.plans[i]
+							drawBar(plan.id, plan.author + "'s " + plan.planName, plan.totalTime, plan.spentTime );
+						}
+					}
+				}, "json");
+				console.log("send finish");
+			});
+			function drawBar(planID, displayName, totalTime, spentTime ){
+				var planTag = $("<div />", { "id": planID,  "class": "planItem"});
+				var barTag = $("<div />", { "id": "bar" + planID } );
+				barTag.progressbar({ "max": totalTime, "value": spentTime});
+				barTag.height(10);
+				// final aggregate 
+				planTag.append(barTag);
+				
+				$("#barRegion").append( displayName );
+				$("#barRegion").append( planTag );
+				//planList.push(planID);
 			}
-function GetPlan(){
-	$.get("GetPlan", {publicPlans: 1}, function (xml){
-		alert(xml);
-	})
-}
-
-function NewPlan(){
-	$.post("MakePlan", {newPlan: 1, planName: "jquery", hour:"12"}, function (xml){
-		alert(xml);
-	})
-}
-
-function DisplayWholeFrom(){
-	$("#NewProject").html(
-		//'<form name="NewProject" action="/TenThousandHours/MakePlan" method="post">\
-		'<form name="NewProject">\
-		<input type="hidden" name="newPlan" value="1" />\
-		<input id="NewProjectFocusText" type="text" value="" name="planName" size="10" class="wide" /><br />\
-		<input type="text" value="10" name="hour" size="4" />Hour\
-		<input type="">\
-		<input type="submit" value="+" onclick="NewPlan()"/></form>\
-		<button type="button" onclick="NewPlan()">+</button>'
-	);
-	var text_val = document.getElementById("NewProjectFocusText");
-	text_val.focus();
-}
 		</script>
 	</head>
 	<body>
-		<div id="NewProject" class="blocktext">
-			<input type="text" value="Your new project" name="ProjectName" onclick="DisplayWholeFrom();"/> hello world
-		</div>
-		<div class="demo">
-			<div id="slider"></div>
-		</div>
+	<div id="navigationLink">
+		<a id="homeLink" href="index.html" style="display: none">Home</a>
+		<a id="personalLink" href="personal.html" style="display: none">Personal Page</a>
+		<a id="logLink" href=""></a>
+	</div>
+	<div id="barRegion" class="dynamicSliderRegion planItem">
+	</div>
 	</body>
 </html>

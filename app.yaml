@@ -18,6 +18,13 @@ handlers:
   static_files: TenThousandHours/personal.html
   upload: TenThousandHours/personal.html
 
+- url: /TenThousandHours/index\.html
+  static_files: TenThousandHours/index.html
+  upload: TenThousandHours/index.html
+
+- url: /TenThousandHours/loginController
+  script: loginController.app
+
 - url: /TenThousandHours/.*
   script: TenThousandHours.app
 

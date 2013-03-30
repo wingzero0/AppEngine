@@ -160,22 +160,26 @@ class GetPlan(webapp2.RequestHandler):
 	def get(self):
 		# get all user plans
 		self.planName = self.request.get("planName");
-		if self.request.get("publicPlans") == '1':
+		if self.request.get("op") == "publicPlans":
 			planQuery = Plan.all()
 			planQuery = planQuery.order("-createTime")
 			plans = planQuery.fetch(10)
 			ret = dict()
 			ret['result'] = 1
+			ret["plans"] = dict()
 			i = 0
 			for plan in plans:
-				ret[i] = dict()
-				ret[i]['author'] = plan.author
-				ret[i]['planName'] = plan.planName
-				ret[i]['createTime'] = "%s" % (plan.createTime)
-				ret[i]['totalTime'] = plan.totalTime
-				ret[i]['spentTime'] = plan.spentTime
+				ret["plans"][i] = dict()
+				ret["plans"][i]['author'] = plan.author
+				ret["plans"][i]['planName'] = plan.planName
+				ret["plans"][i]['createTime'] = "%s" % (plan.createTime)
+				ret["plans"][i]['totalTime'] = plan.totalTime
+				ret["plans"][i]['spentTime'] = plan.spentTime
+				ret["plans"][i]['id'] = plan.key().id()
 				i = i + 1
+			ret["totalNum"] = i
 			self.response.out.write(json.dumps(ret))
+			return
 			
 		if not users.get_current_user() :
 			# the javascript will stuck here

@@ -12,7 +12,7 @@ div.dynamicSliderRegion {
 	padding: 10px !important; 
 	margin-left: auto;
 	margin-right: auto;
-	width: 700px;
+	width: 600px;
 	/*height: 1000px; */
 }
 
@@ -23,17 +23,22 @@ div.planItem{
 	/*margin: 50px;
 	padding: 10px;*/
 }
-
+/*
 div.minusEdit{
 	float:left;
-	/*width: 30px;*/
+	vertical-align:middle;
 }
+
 div.plusEdit{
-	/*width: 30px;*/
+	//width: 30px;
 	float: right;
 }
+*/
 div.slider{
 	width:500px;
-	float:left;
+	//float:left;
 }
+
+.ui-slider .ui-slider-handle { width: 0.6em; height: 1.2em; }
+
 .wide {width:100%;}
